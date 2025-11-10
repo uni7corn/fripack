@@ -3,6 +3,7 @@ use crate::config::{ResolvedConfig, ResolvedTarget};
 use crate::downloader::Downloader;
 use anyhow::Result;
 use colored::*;
+use log::warn;
 use rand::Rng;
 use std::path::{Path, PathBuf};
 use tempfile;
@@ -37,7 +38,13 @@ impl Builder {
             Some("android-so") => self.build_android_so(target_name, target).await,
             Some("xposed") => self.build_xposed(target_name, target).await,
             Some(other) => anyhow::bail!("Unsupported target type: {}", other),
-            None => anyhow::bail!("Missing required field: type"),
+            None => {
+                warn!(
+                    "Target type not specified for target: {}, skipping...",
+                    target_name
+                );
+                Ok(())
+            }
         }
     }
 
@@ -154,22 +161,11 @@ impl Builder {
             .package_name
             .as_ref()
             .ok_or_else(|| anyhow::anyhow!("Missing required field: packageName"))?;
-        let keystore = target
-            .keystore
-            .as_ref()
-            .ok_or_else(|| anyhow::anyhow!("Missing required field: keystore"))?;
-        let keystore_pass = target
-            .keystore_pass
-            .as_ref()
-            .ok_or_else(|| anyhow::anyhow!("Missing required field: keystorePass"))?;
-        let keystore_alias = target
-            .keystore_alias
-            .as_ref()
-            .ok_or_else(|| anyhow::anyhow!("Missing required field: keystoreAlias"))?;
         let name = target
             .name
             .as_ref()
             .ok_or_else(|| anyhow::anyhow!("Missing required field: name"))?;
+        let sign = target.sign.unwrap_or(false);
         let output_dir = target.output_dir.as_deref().unwrap_or("./fripack");
         let binary_data = self.generate_binary(target).await?;
 
@@ -424,54 +420,85 @@ doNotCompress:
         );
 
         // 12. Sign the APK using apksigner.
-        println!("{} {}", "→".blue(), "Signing APK with apksigner...".blue());
-        let unsigned_apk_path = temp_path.join("dist").join("app-debug.apk");
-        let signed_apk_path = temp_path
-            .join("dist")
-            .join(format!("{}-{}-signed.apk", target_name, platform));
+        if sign {
+            println!("{} {}", "→".blue(), "Signing APK with apksigner...".blue());
+            let unsigned_apk_path = temp_path.join("dist").join("app-debug.apk");
+            let signed_apk_path = temp_path
+                .join("dist")
+                .join(format!("{}-{}-signed.apk", target_name, platform));
 
-        let mut command = tokio::process::Command::new("cmd");
+            let keystore = target
+                .keystore
+                .as_ref()
+                .ok_or_else(|| anyhow::anyhow!("Missing required field: keystore"))?;
+            let keystore_pass = target
+                .keystore_pass
+                .as_ref()
+                .ok_or_else(|| anyhow::anyhow!("Missing required field: keystorePass"))?;
+            let keystore_alias = target
+                .keystore_alias
+                .as_ref()
+                .ok_or_else(|| anyhow::anyhow!("Missing required field: keystoreAlias"))?;
 
-        command
-            .arg("/C")
-            .arg("apksigner")
-            .arg("sign")
-            .arg("--ks")
-            .arg(keystore)
-            .arg("--ks-key-alias")
-            .arg(keystore_alias)
-            .arg("--ks-pass")
-            .arg(format!("pass:{}", keystore_pass));
+            let mut command = if cfg!(target_os = "windows") {
+                let mut cmd = Command::new("cmd");
+                cmd.arg("/C");
+                cmd.arg("apksigner");
+                cmd
+            } else {
+                Command::new("apksigner")
+            };
+            command
+                .arg("sign")
+                .arg("--ks")
+                .arg(keystore)
+                .arg("--ks-key-alias")
+                .arg(keystore_alias)
+                .arg("--ks-pass")
+                .arg(format!("pass:{}", keystore_pass));
 
-        let output = command
-            .arg("--out")
-            .arg(&signed_apk_path)
-            .arg(&unsigned_apk_path)
-            .output()
-            .await?;
+            let output = command
+                .arg("--out")
+                .arg(&signed_apk_path)
+                .arg(&unsigned_apk_path)
+                .output()
+                .await?;
 
-        if !output.status.success() {
-            anyhow::bail!(
-                "apksigner failed: {}",
-                String::from_utf8_lossy(&output.stderr)
+            if !output.status.success() {
+                anyhow::bail!(
+                    "apksigner failed: {}",
+                    String::from_utf8_lossy(&output.stderr)
+                );
+            }
+            println!(
+                "{} {}",
+                "✓".green(),
+                "APK signed successfully with apksigner.".green()
+            );
+
+            // 13. Copy the signed APK back to the desired location.
+            let final_apk_name = format!("{}-{}.apk", target_name, platform);
+            let final_apk_path = std::path::Path::new(&output_dir).join(&final_apk_name);
+            std::fs::create_dir_all(output_dir)?;
+            fs::copy(&signed_apk_path, &final_apk_path).await?;
+            println!(
+                "{} {}",
+                "✓".green(),
+                format!("Copied signed APK to: {}", final_apk_path.display()).green()
+            );
+        } else {
+            // If not signing, just copy the unsigned APK
+            let unsigned_apk_path = temp_path.join("dist").join("app-debug.apk");
+            let final_apk_name = format!("{}-{}.apk", target_name, platform);
+            let final_apk_path = std::path::Path::new(&output_dir).join(&final_apk_name);
+            std::fs::create_dir_all(output_dir)?;
+            fs::copy(&unsigned_apk_path, &final_apk_path).await?;
+            println!(
+                "{} {}",
+                "✓".green(),
+                format!("Copied APK to: {}", final_apk_path.display()).green()
             );
         }
-        println!(
-            "{} {}",
-            "✓".green(),
-            "APK signed successfully with apksigner.".green()
-        );
-
-        // 13. Copy the signed APK back to the desired location.
-        let final_apk_name = format!("{}-{}.apk", target_name, platform);
-        let final_apk_path = std::path::Path::new(&output_dir).join(&final_apk_name);
-        std::fs::create_dir_all(output_dir)?;
-        fs::copy(&signed_apk_path, &final_apk_path).await?;
-        println!(
-            "{} {}",
-            "✓".green(),
-            format!("Copied signed APK to: {}", final_apk_path.display()).green()
-        );
 
         Ok(())
     }

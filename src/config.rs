@@ -66,6 +66,9 @@ pub struct TargetConfig {
     /// Keystore alias (for Xposed modules)
     #[serde(rename = "keystoreAlias")]
     pub keystore_alias: Option<String>,
+
+    /// Signing configuration (for Xposed modules)
+    pub sign: Option<bool>,
 }
 
 impl FripackConfig {
@@ -91,6 +94,7 @@ impl FripackConfig {
             description: None,
             keystore_pass: None,
             keystore_alias: None,
+            sign: None,
         });
         
         // Example Xposed module
@@ -112,6 +116,7 @@ impl FripackConfig {
             description: Some("Easy example which makes the status bar clock red and adds a smiley".to_string()),
             keystore_pass: Some("android".to_string()),
             keystore_alias: Some("androiddebugkey".to_string()),
+            sign: Some(true),
         });
         
         // Example Android SO
@@ -133,6 +138,7 @@ impl FripackConfig {
             description: None,
             keystore_pass: None,
             keystore_alias: None,
+            sign: None,
         });
         
         Self { targets }
@@ -231,6 +237,9 @@ impl FripackConfig {
         if let Some(keystore_alias) = &target.keystore_alias {
             resolved.keystore_alias = Some(keystore_alias.clone());
         }
+        if let Some(sign) = &target.sign {
+            resolved.sign = Some(*sign);
+        }
         
         processing.remove(name);
         resolved_targets.insert(name.to_string(), resolved);
@@ -255,6 +264,7 @@ pub struct ResolvedTarget {
     pub xz: bool,
     pub override_prebuild_file: Option<String>,
     pub package_name: Option<String>,
+    pub sign: Option<bool>,
     pub keystore: Option<String>,
     pub keystore_pass: Option<String>,
     pub keystore_alias: Option<String>,
