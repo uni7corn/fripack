@@ -1,0 +1,47 @@
+name: CI
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+  release:
+    types: [ published ]
+
+jobs:
+  build:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+    steps:
+    - uses: actions/checkout@v4
+    - name: Setup Rust
+      uses: dtolnay/rust-toolchain@stable
+    - name: Build
+      run: cargo build --release
+    - name: Upload artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: fripack-${{ matrix.os }}
+        path: target/release/fripack${{ matrix.os == 'windows-latest' && '.exe' || '' }}
+
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+    if: github.event_name == 'release'
+    steps:
+    - uses: actions/checkout@v4
+    - name: Download artifacts
+      uses: actions/download-artifact@v4
+      with:
+        path: artifacts
+    - name: Upload binaries to release
+      uses: softprops/action-gh-release@v2
+      with:
+        files: |
+          artifacts/fripack-ubuntu-latest/fripack
+          artifacts/fripack-windows-latest/fripack.exe
+          artifacts/fripack-macos-latest/fripack
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
