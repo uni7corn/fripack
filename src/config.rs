@@ -13,6 +13,15 @@ macro_rules! merge_fields {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct SignConfig {
+    pub keystore: String,
+    #[serde(rename = "keystorePass")]
+    pub keystore_pass: String,
+    #[serde(rename = "keystoreAlias")]
+    pub keystore_alias: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct FripackConfig {
     #[serde(flatten)]
     pub targets: HashMap<String, TargetConfig>,
@@ -36,13 +45,10 @@ impl FripackConfig {
                 xz: Some(false),
                 override_prebuild_file: None,
                 package_name: None,
-                keystore: None,
                 name: None,
                 icon: None,
                 scope: None,
                 description: None,
-                keystore_pass: None,
-                keystore_alias: None,
                 sign: None,
                 output_dir: None,
                 target_base_name: None,
@@ -65,7 +71,6 @@ impl FripackConfig {
                 xz: None,
                 override_prebuild_file: None,
                 package_name: Some("com.example.myxposedmodule".to_string()),
-                keystore: Some("C:\\Users\\YourUser\\.android\\debug.keystore".to_string()),
                 name: Some("My Xposed Module".to_string()),
                 icon: Some("res\\icon.png".to_string()),
                 scope: Some("com.example.a;com.example.b".to_string()),
@@ -73,9 +78,11 @@ impl FripackConfig {
                     "Easy example which makes the status bar clock red and adds a smiley"
                         .to_string(),
                 ),
-                keystore_pass: Some("android".to_string()),
-                keystore_alias: Some("androiddebugkey".to_string()),
-                sign: Some(true),
+                sign: Some(SignConfig {
+                    keystore: "C:\\Users\\YourUser\\.android\\debug.keystore".to_string(),
+                    keystore_pass: "android".to_string(),
+                    keystore_alias: "androiddebugkey".to_string(),
+                }),
                 output_dir: None,
                 target_base_name: None,
                 before_build: None,
@@ -97,13 +104,10 @@ impl FripackConfig {
                 xz: None,
                 override_prebuild_file: Some("./libfripack-inject.so".to_string()),
                 package_name: None,
-                keystore: None,
                 name: None,
                 icon: None,
                 scope: None,
                 description: None,
-                keystore_pass: None,
-                keystore_alias: None,
                 sign: None,
                 output_dir: None,
                 target_base_name: None,
@@ -190,12 +194,7 @@ pub struct TargetConfig {
     pub override_prebuild_file: Option<String>,
     #[serde(rename = "packageName")]
     pub package_name: Option<String>,
-    pub sign: Option<bool>,
-    pub keystore: Option<String>,
-    #[serde(rename = "keystorePass")]
-    pub keystore_pass: Option<String>,
-    #[serde(rename = "keystoreAlias")]
-    pub keystore_alias: Option<String>,
+    pub sign: Option<SignConfig>,
     pub name: Option<String>,
     pub icon: Option<String>,
     pub scope: Option<String>,
@@ -315,10 +314,7 @@ pub struct ResolvedTarget {
     pub xz: Option<bool>,
     pub override_prebuild_file: Option<String>,
     pub package_name: Option<String>,
-    pub sign: Option<bool>,
-    pub keystore: Option<String>,
-    pub keystore_pass: Option<String>,
-    pub keystore_alias: Option<String>,
+    pub sign: Option<SignConfig>,
     pub name: Option<String>,
     pub icon: Option<String>,
     pub scope: Option<String>,
@@ -342,13 +338,10 @@ impl ResolvedTarget {
             xz,
             override_prebuild_file,
             package_name,
-            keystore,
             name,
             icon,
             scope,
             description,
-            keystore_pass,
-            keystore_alias,
             sign,
             output_dir,
             target_base_name,

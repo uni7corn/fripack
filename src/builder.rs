@@ -186,7 +186,7 @@ impl Builder {
             anyhow::bail!("Xposed target only supports Android platform");
         }
 
-        let sign = target.sign.unwrap_or(false);
+        let sign = target.sign.is_some();
         let output_dir = target.output_dir.as_deref().unwrap_or("./fripack");
         let binary_data = self.generate_binary(target).await?;
 
@@ -402,18 +402,10 @@ doNotCompress:
                 .join("dist")
                 .join(format!("{base_name}-{platform}-signed.apk"));
 
-            let keystore = target
-                .keystore
-                .as_ref()
-                .ok_or_else(|| anyhow::anyhow!("Missing required field: keystore"))?;
-            let keystore_pass = target
-                .keystore_pass
-                .as_ref()
-                .ok_or_else(|| anyhow::anyhow!("Missing required field: keystorePass"))?;
-            let keystore_alias = target
-                .keystore_alias
-                .as_ref()
-                .ok_or_else(|| anyhow::anyhow!("Missing required field: keystoreAlias"))?;
+            let sign_config = target.sign.as_ref().unwrap();
+            let keystore = &sign_config.keystore;
+            let keystore_pass = &sign_config.keystore_pass;
+            let keystore_alias = &sign_config.keystore_alias;
 
             let mut command = if cfg!(target_os = "windows") {
                 let mut cmd = Command::new("cmd");

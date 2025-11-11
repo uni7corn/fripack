@@ -13,11 +13,12 @@
         "type": "xposed",
         "platform": "android-arm64",
         "packageName": "com.example.myxposedmodule",
-        "keystore": "C:\\Users\\MicroBlock\\.android\\debug.keystore",
-        "keystorePass": "android",
-        "keystoreAlias": "androiddebugkey",
         "name": "My Xposed Module",
-        "sign": true
+        "sign": {
+            "keystore": "C:\\Users\\MicroBlock\\.android\\debug.keystore",
+            "keystorePass": "android",
+            "keystoreAlias": "androiddebugkey"
+        }
     },
     "xp-arm32": {
         "inherit": "xp",

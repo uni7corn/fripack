@@ -7,7 +7,7 @@
 
 Frida is a powerful tool, but its size and the need for root access make it challenging to distribute scripts to end-users. This often limits Frida’s use in developing plugins for wider audiences.
 
-Fripack solves this by packaging your Frida scripts into various executable formats—such as Xposed Modules, Zygisk Modules, shared objects for `LD_PRELOAD`, or injectable DLLs—enabling easy distribution and use of Frida-based plugins.
+Fripack solves this by packaging your Frida scripts into various executable formats—such as Xposed Modules, patched apks, shared objects for `LD_PRELOAD`, or injectable DLLs—enabling easy distribution and use of Frida-based plugins.
 
 ### Binary Size Matters
 
@@ -38,7 +38,12 @@ Fripack uses a configuration file named `fripack.json`, which supports JSON5 syn
         "entry": "main.js",
         "platform": "android-arm64",
         "packageName": "com.example.myxposedmodule",
-        "name": "My Xposed Module"
+        "name": "My Xposed Module",
+        "sign": {
+            "keystore": "./.android/debug.keystore",
+            "keystorePass": "android",
+            "keystoreAlias": "androiddebugkey"
+        }
     }
 }
 ```
@@ -90,9 +95,11 @@ Example using inheritance to avoid repetition:
         "inherit": "base",
         "type": "xposed",
         "packageName": "com.example.myxposedmodule",
-        "keystore": "./.android/debug.keystore",
-        "keystorePass": "android",
-        "keystoreAlias": "androiddebugkey",
+        "sign": {
+            "keystore": "./.android/debug.keystore",
+            "keystorePass": "android",
+            "keystoreAlias": "androiddebugkey"
+        },
         "name": "My Xposed Module"
     },
     "raw-so": {
@@ -115,10 +122,10 @@ Builds your Frida script into an Xposed Module. Only supports `Android` platform
 
 **Additional options:**
 
-- `sign` (optional): Whether to sign the generated APK (requires `apksigner`).
-  - `keystore` (required if signing): Path to the keystore.
-  - `keystorePass` (required if signing): Keystore passphrase.
-  - `keystoreAlias` (required if signing): Alias in the keystore.
+- `sign` (optional): Signing configuration. If provided as an object, the APK will be signed.
+  - `keystore`: Path to the keystore.
+  - `keystorePass`: Keystore passphrase.
+  - `keystoreAlias`: Alias in the keystore.
 - `packageName` (required): Package name for the Xposed module.
 - `name` (required): Display name of the module.
 - `scope` (optional): Suggested target scope for the module.

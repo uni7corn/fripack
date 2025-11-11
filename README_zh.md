@@ -7,7 +7,7 @@
 
 Frida 是一个强大的工具，但其体积较大且通常需要 root 权限，这使得将脚本分发给最终用户变得困难。这常常限制了 Frida 在开发面向更广泛用户的插件中的应用。
 
-Fripack 通过将你的 Frida 脚本打包成各种可执行格式来解决这个问题——例如 Xposed 模块、Zygisk 模块、用于 `LD_PRELOAD` 的动态共享库，或可注入的 DLL——使得基于 Frida 的插件能够轻松分发和使用。
+Fripack 通过将你的 Frida 脚本打包成各种可执行格式来解决这个问题——例如 Xposed 模块、捆绑模块的 APK、用于 `LD_PRELOAD` 的 `.so`，或可注入的 DLL——使得基于 Frida 的插件能够轻松分发和使用。
 
 ## 安装
 
@@ -29,7 +29,12 @@ Fripack 使用一个名为 `fripack.json` 的配置文件，该文件支持 JSON
         "entry": "main.js",
         "platform": "android-arm64",
         "packageName": "com.example.myxposedmodule",
-        "name": "我的 Xposed 模块"
+        "name": "我的 Xposed 模块",
+        "sign": {
+            "keystore": "./.android/debug.keystore",
+            "keystorePass": "android",
+            "keystoreAlias": "androiddebugkey"
+        }
     }
 }
 ```
@@ -81,9 +86,11 @@ fripack build xposed
         "inherit": "base",
         "type": "xposed",
         "packageName": "com.example.myxposedmodule",
-        "keystore": "./.android/debug.keystore",
-        "keystorePass": "android",
-        "keystoreAlias": "androiddebugkey",
+        "sign": {
+            "keystore": "./.android/debug.keystore",
+            "keystorePass": "android",
+            "keystoreAlias": "androiddebugkey"
+        },
         "name": "我的 Xposed 模块"
     },
     "raw-so": {
@@ -106,10 +113,10 @@ fripack build xposed
 
 **额外选项：**
 
-- `sign` (可选): 是否对生成的 APK 进行签名（需要 `apksigner`）。
-  - `keystore` (签名时必需): 密钥库路径。
-  - `keystorePass` (签名时必需): 密钥库密码。
-  - `keystoreAlias` (签名时必需): 密钥库中的别名。
+- `sign` (可选): 签名配置。如果提供对象，则对 APK 进行签名。
+  - `keystore`: 密钥库路径。
+  - `keystorePass`: 密钥库密码。
+  - `keystoreAlias`: 密钥库中的别名。
 - `packageName` (必需): Xposed 模块的包名。
 - `name` (必需): 模块的显示名称。
 - `scope` (可选): 模块建议的作用范围。
