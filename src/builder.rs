@@ -138,7 +138,8 @@ impl Builder {
     }
 
     async fn build_shared(&mut self, target_name: &str, target: &ResolvedTarget) -> Result<()> {
-        info!("→ Building Shared Library target: {target_name}");
+        let base_name = target.target_base_name.as_deref().unwrap_or(target_name);
+        info!("→ Building Shared Library target: {target_name} (base name: {base_name})");
 
         let output_dir = target.output_dir.as_deref().unwrap_or("./fripack");
 
@@ -148,7 +149,7 @@ impl Builder {
             .as_ref()
             .ok_or_else(|| anyhow::anyhow!("Missing required field: platform"))?;
         let output_filename = format!(
-            "{target_name}-{platform}.{}",
+            "{base_name}-{platform}.{}",
             platform.platform.binary_ext()
         );
         let output_file_path = std::path::Path::new(output_dir).join(&output_filename);
@@ -164,7 +165,8 @@ impl Builder {
     }
 
     async fn build_xposed(&mut self, target_name: &str, target: &ResolvedTarget) -> Result<()> {
-        info!("→ Building Xposed target: {target_name}");
+        let base_name = target.target_base_name.as_deref().unwrap_or(target_name);
+        info!("→ Building Xposed target: {target_name} (base name: {base_name})");
 
         // Get required fields
         let platform = target
@@ -398,7 +400,7 @@ doNotCompress:
             let unsigned_apk_path = temp_path.join("dist").join("app-debug.apk");
             let signed_apk_path = temp_path
                 .join("dist")
-                .join(format!("{target_name}-{platform}-signed.apk"));
+                .join(format!("{base_name}-{platform}-signed.apk"));
 
             let keystore = target
                 .keystore
@@ -446,7 +448,7 @@ doNotCompress:
             info!("✓ APK signed successfully with apksigner.");
 
             // 13. Copy the signed APK back to the desired location.
-            let final_apk_name = format!("{target_name}-{platform}.apk");
+            let final_apk_name = format!("{base_name}-{platform}.apk");
             let final_apk_path = std::path::Path::new(&output_dir).join(&final_apk_name);
             std::fs::create_dir_all(output_dir)?;
             fs::copy(&signed_apk_path, &final_apk_path).await?;
@@ -454,7 +456,7 @@ doNotCompress:
         } else {
             // If not signing, just copy the unsigned APK
             let unsigned_apk_path = temp_path.join("dist").join("app-debug.apk");
-            let final_apk_name = format!("{target_name}-{platform}.apk");
+            let final_apk_name = format!("{base_name}-{platform}.apk");
             let final_apk_path = std::path::Path::new(&output_dir).join(&final_apk_name);
             std::fs::create_dir_all(output_dir)?;
             fs::copy(&unsigned_apk_path, &final_apk_path).await?;

@@ -61,6 +61,7 @@ The following options are available for all target types:
 - `version`: Version of your plugin.
 - `type`: Type of the target (defines the output format).
 - `inherit`: Key of another target to inherit configuration from.
+- `targetBaseName` (optional): Base name for output files (defaults to target key).
 - `beforeBuild` (optional): Command to execute before building the target.
 - `afterBuild` (optional): Command to execute after successfully building the target.
 
