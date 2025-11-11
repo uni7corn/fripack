@@ -145,7 +145,7 @@ On Windows, logs are written to both `stdout` and the Windows Debug Log. To view
 
 On other platforms, logs are directed to `stdout`.
 
-### `ReferenceError: 'Java' is not defined`
+### ReferenceError: 'Java' is not defined
 Starting with Frida 17.0.0, bridges are no longer bundled with Frida’s GumJS runtime. This means that users now have to explicitly pull in the bridges they want to use.
 
 You'll have to install the bridge and build your script through `frida-compile` before packaging. Check https://frida.re/docs/bridges/ for more details.
