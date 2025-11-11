@@ -27,13 +27,8 @@ Fripack uses a configuration file named `fripack.json`, which supports JSON5 syn
         "version": "1.0.0",
         "fridaVersion": "17.5.1",
         "entry": "main.js",
-        "xz": true,
-        "outputDir": "./fripack",
-        "platform": "arm64-v8a",
+        "platform": "android-arm64",
         "packageName": "com.example.myxposedmodule",
-        "keystore": "./.android/debug.keystore",
-        "keystorePass": "android",
-        "keystoreAlias": "androiddebugkey",
         "name": "My Xposed Module"
     }
 }
@@ -123,6 +118,26 @@ Builds your Frida script into an Xposed Module. Only supports `Android` platform
 Builds your Frida script into a shared library (`.so` / `.dll`) that can be loaded via various methods (e.g., `LD_PRELOAD`).
 
 ---
+
+## Notes
+### How to check the logs?
+On Android, logs are output through the Android logging system with the tag `FriPackInject`. You can view them using adb:
+```bash
+adb logcat FriPackInject:D *:S
+```
+
+On Windows, logs are written to both `stdout` and the Windows Debug Log. To view them, you can:
+- Attach a debugger to the target application
+- Use `AllocConsole` and `freopen` in your Frida script
+- Start the target application in console
+- Use [DebugView](https://learn.microsoft.com/en-us/sysinternals/downloads/debugview) to monitor the global system log
+
+On other platforms, logs are directed to `stdout`.
+
+### `ReferenceError: 'Java' is not defined`
+Starting with Frida 17.0.0, bridges are no longer bundled with Frida’s GumJS runtime. This means that users now have to explicitly pull in the bridges they want to use.
+
+You'll have to install the bridge and build your script through `frida-compile` before packaging. Check https://frida.re/docs/bridges/ for more details.
 
 ## Credits
 
