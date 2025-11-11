@@ -9,6 +9,11 @@ Frida is a powerful tool, but its size and the need for root access make it chal
 
 Fripack solves this by packaging your Frida scripts into various executable formats—such as Xposed Modules, Zygisk Modules, shared objects for `LD_PRELOAD`, or injectable DLLs—enabling easy distribution and use of Frida-based plugins.
 
+### Binary Size Matters
+
+The original Frida project comes with significant bulk. Fripack streamlines and compresses Frida, resulting in binary outputs under 10 MB on all platforms—except Linux.
+
+<img width="345" height="168" alt="image" src="https://github.com/user-attachments/assets/bf6f1134-f9a0-4d31-b15a-e49ae5c545d8" />
 
 ## Installation
 
