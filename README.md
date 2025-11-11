@@ -15,6 +15,10 @@ The original Frida project comes with significant bulk. Fripack streamlines and 
 
 <img width="345" height="168" alt="image" src="https://github.com/user-attachments/assets/bf6f1134-f9a0-4d31-b15a-e49ae5c545d8" />
 
+### One-Click Build
+
+Cross-platform Frida scripts often make it cumbersome to build deliverables for different targets—even with Frida Gadget. Fripack simplifies development by enabling one-command builds for multiple platforms at once.
+
 ## Installation
 
 Download the latest binary from the [releases page](https://github.com/std-microblock/fripack/releases/latest) and install it as needed.
