@@ -12,8 +12,10 @@
         "inherit": "base",
         "type": "xposed",
         "platform": "android-arm64",
-        "packageName": "com.example.myxposedmodule",
-        "name": "My Xposed Module",
+        "xposed": {
+            "packageName": "com.example.myxposedmodule",
+            "name": "My Xposed Module",
+        },
         "sign": {
             "keystore": "C:\\Users\\MicroBlock\\.android\\debug.keystore",
             "keystorePass": "android",
@@ -37,25 +39,25 @@
         "type": "shared",
         "platform": "linux-x64",
     },
-    "bb": {
+    "windows_dll": {
         "inherit": "base",
         "type": "shared",
         "platform": "windows-x64",
     },
-    "inject": {
-        "type": "inject-apk",
-        "platform": "android-arm64",
-        "fridaVersion": "17.5.1",
-        "entry": "main.js",
-        "injectApk": {
-            "sourceApkPath": "E:\\rev-yunyundong\\云运动_3.5.7_kill.apk",
-            "injectMode": "NativeAddNeeded",
-            // "targetLib": "libnative-lib.so",
-        },
-        "sign": {
-            "keystore": "C:\\Users\\MicroBlock\\.android\\debug.keystore",
-            "keystorePass": "android",
-            "keystoreAlias": "androiddebugkey"
-        }
-    }
+    // "inject-apk": {
+    //     "inherit": "base",
+    //     "type": "inject-apk",
+    //     "platform": "android-arm64",
+    //     "fridaVersion": "17.5.1",
+    //     "entry": "main.js",
+    //     "injectApk": {
+    //         "sourceApkPath": "E:\\rev-yunyundong\\云运动_3.5.7_kill.apk",
+    //         "injectMode": "NativeAddNeeded",
+    //     },
+    //     "sign": {
+    //         "keystore": "C:\\Users\\MicroBlock\\.android\\debug.keystore",
+    //         "keystorePass": "android",
+    //         "keystoreAlias": "androiddebugkey"
+    //     }
+    // }
 }

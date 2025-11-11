@@ -37,8 +37,10 @@ Fripack uses a configuration file named `fripack.json`, which supports JSON5 syn
         "fridaVersion": "17.5.1",
         "entry": "main.js",
         "platform": "android-arm64",
-        "packageName": "com.example.myxposedmodule",
-        "name": "My Xposed Module",
+        "xposed": {
+            "packageName": "com.example.myxposedmodule",
+            "name": "My Xposed Module"
+        },
         "sign": {
             "keystore": "./.android/debug.keystore",
             "keystorePass": "android",
@@ -94,13 +96,15 @@ Example using inheritance to avoid repetition:
     "xposed": {
         "inherit": "base",
         "type": "xposed",
-        "packageName": "com.example.myxposedmodule",
+        "xposed": {
+            "packageName": "com.example.myxposedmodule",
+            "name": "My Xposed Module"
+        },
         "sign": {
             "keystore": "./.android/debug.keystore",
             "keystorePass": "android",
             "keystoreAlias": "androiddebugkey"
-        },
-        "name": "My Xposed Module"
+        }
     },
     "raw-so": {
         "inherit": "base",
@@ -122,14 +126,16 @@ Builds your Frida script into an Xposed Module. Only supports `Android` platform
 
 **Additional options:**
 
+- `xposed` (required): Xposed configuration object.
+  - `packageName` (required): Package name for the Xposed module.
+  - `name` (required): Display name of the module.
+  - `icon` (optional): Path to the module icon (expects `ic_launcher.webp` and `ic_launcher_round.webp` in the same directory).
+  - `scope` (optional): Suggested target scope for the module.
+  - `description` (optional): Description of the module.
 - `sign` (optional): Signing configuration. If provided as an object, the APK will be signed.
   - `keystore`: Path to the keystore.
   - `keystorePass`: Keystore passphrase.
   - `keystoreAlias`: Alias in the keystore.
-- `packageName` (required): Package name for the Xposed module.
-- `name` (required): Display name of the module.
-- `scope` (optional): Suggested target scope for the module.
-- `description` (optional): Description of the module.
 
 #### `shared`
 

@@ -38,8 +38,11 @@ Fripack 使用一个名为 `fripack.json` 的配置文件，该文件支持 JSON
         "fridaVersion": "17.5.1",
         "entry": "main.js",
         "platform": "android-arm64",
-        "packageName": "com.example.myxposedmodule",
-        "name": "我的 Xposed 模块",
+        "xposed": {
+            "packageName": "com.example.myxposedmodule",
+            "name": "我的 Xposed 模块",
+            "scope": "com.example.app1;com.example.app2"
+        },
         "sign": {
             "keystore": "./.android/debug.keystore",
             "keystorePass": "android",
@@ -95,13 +98,15 @@ fripack build xposed
     "xposed": {
         "inherit": "base",
         "type": "xposed",
-        "packageName": "com.example.myxposedmodule",
+        "xposed": {
+            "packageName": "com.example.myxposedmodule",
+            "name": "我的 Xposed 模块"
+        },
         "sign": {
             "keystore": "./.android/debug.keystore",
             "keystorePass": "android",
             "keystoreAlias": "androiddebugkey"
-        },
-        "name": "我的 Xposed 模块"
+        }
     },
     "raw-so": {
         "inherit": "base",
@@ -118,19 +123,21 @@ fripack build xposed
 
 #### `xposed`
 
-将你的 Frida 脚本构建成一个 Xposed 模块。  
+将你的 Frida 脚本构建成一个 Xposed 模块。
 **要求：** 系统中已安装 [`apktool`](https://apktool.org/)。
 
 **额外选项：**
 
+- `xposed` (必需): Xposed 配置对象。
+  - `packageName` (必需): Xposed 模块的包名。
+  - `name` (必需): 模块的显示名称。
+  - `icon` (可选): 模块图标路径（期望同一目录下有 `ic_launcher.webp` 和 `ic_launcher_round.webp`）。
+  - `scope` (可选): 模块建议的作用范围。
+  - `description` (可选): 模块描述。
 - `sign` (可选): 签名配置。如果提供对象，则对 APK 进行签名。
   - `keystore`: 密钥库路径。
   - `keystorePass`: 密钥库密码。
   - `keystoreAlias`: 密钥库中的别名。
-- `packageName` (必需): Xposed 模块的包名。
-- `name` (必需): 模块的显示名称。
-- `scope` (可选): 模块建议的作用范围。
-- `description` (可选): 模块描述。
 
 #### `shared`
 

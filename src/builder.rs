@@ -171,11 +171,15 @@ impl Builder {
             .platform
             .as_ref()
             .ok_or_else(|| anyhow::anyhow!("Missing required field: platform"))?;
-        let package_name = target
+        let xposed_config = target
+            .xposed
+            .as_ref()
+            .ok_or_else(|| anyhow::anyhow!("Missing required field: xposed"))?;
+        let package_name = xposed_config
             .package_name
             .as_ref()
             .ok_or_else(|| anyhow::anyhow!("Missing required field: packageName"))?;
-        let name = target
+        let name = xposed_config
             .name
             .as_ref()
             .ok_or_else(|| anyhow::anyhow!("Missing required field: name"))?;
@@ -280,7 +284,7 @@ impl Builder {
         info!("→ Created smali file: {}", smali_file_path.display());
 
         // 8. Copy ic_launcher.webp and ic_launcher_round.webp if specified in the config.
-        if let Some(icon_path_str) = &target.icon {
+        if let Some(icon_path_str) = xposed_config.icon.as_ref() {
             let icon_path = PathBuf::from(icon_path_str);
             let res_mipmap_xxhdpi_dir = temp_path.join("res").join("mipmap-xxhdpi");
             fs::create_dir_all(&res_mipmap_xxhdpi_dir).await?;
@@ -316,18 +320,18 @@ impl Builder {
         // 9. Modify AndroidManifest.xml based on the configuration.
         let manifest_path = temp_path.join("AndroidManifest.xml");
 
-        let icon_attributes = if target.icon.is_some() {
+        let icon_attributes = if xposed_config.icon.is_some() {
             r#"android:icon="@mipmap/ic_launcher" android:roundIcon="@mipmap/ic_launcher_round""#
                 .to_string()
         } else {
             "".to_string()
         };
 
-        let xposed_description = target
+        let xposed_description = xposed_config
             .description
             .as_deref()
             .unwrap_or("Easy example which makes the status bar clock red and adds a smiley");
-        let xposed_scope = target
+        let xposed_scope = xposed_config
             .scope
             .as_deref()
             .unwrap_or("com.example.a;com.example.b");

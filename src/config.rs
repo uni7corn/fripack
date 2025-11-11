@@ -40,6 +40,16 @@ pub struct InjectApkConfig {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct XposedConfig {
+    #[serde(rename = "packageName")]
+    pub package_name: Option<String>,
+    pub name: Option<String>,
+    pub icon: Option<String>,
+    pub scope: Option<String>,
+    pub description: Option<String>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct FripackConfig {
     #[serde(flatten)]
     pub targets: HashMap<String, TargetConfig>,
@@ -62,17 +72,13 @@ impl FripackConfig {
                 entry: Some("main.js".to_string()),
                 xz: Some(false),
                 override_prebuild_file: None,
-                package_name: None,
-                name: None,
-                icon: None,
-                scope: None,
-                description: None,
                 sign: None,
                 output_dir: None,
                 target_base_name: None,
                 before_build: None,
                 after_build: None,
                 inject_apk: None,
+                xposed: None,
             },
         );
 
@@ -89,14 +95,6 @@ impl FripackConfig {
                 entry: None,
                 xz: None,
                 override_prebuild_file: None,
-                package_name: Some("com.example.myxposedmodule".to_string()),
-                name: Some("My Xposed Module".to_string()),
-                icon: Some("res\\icon.png".to_string()),
-                scope: Some("com.example.a;com.example.b".to_string()),
-                description: Some(
-                    "Easy example which makes the status bar clock red and adds a smiley"
-                        .to_string(),
-                ),
                 sign: Some(SignConfig {
                     keystore: "C:\\Users\\YourUser\\.android\\debug.keystore".to_string(),
                     keystore_pass: "android".to_string(),
@@ -107,6 +105,16 @@ impl FripackConfig {
                 before_build: None,
                 after_build: None,
                 inject_apk: None,
+                xposed: Some(XposedConfig {
+                    package_name: Some("com.example.myxposedmodule".to_string()),
+                    name: Some("My Xposed Module".to_string()),
+                    icon: Some("res\\icon.png".to_string()),
+                    scope: Some("com.example.a;com.example.b".to_string()),
+                    description: Some(
+                        "Easy example which makes the status bar clock red and adds a smiley"
+                            .to_string(),
+                    ),
+                }),
             },
         );
 
@@ -123,17 +131,13 @@ impl FripackConfig {
                 entry: None,
                 xz: None,
                 override_prebuild_file: Some("./libfripack-inject.so".to_string()),
-                package_name: None,
-                name: None,
-                icon: None,
-                scope: None,
-                description: None,
                 sign: None,
                 output_dir: None,
                 target_base_name: None,
                 before_build: None,
                 after_build: None,
                 inject_apk: None,
+                xposed: None,
             },
         );
 
@@ -150,11 +154,6 @@ impl FripackConfig {
                 entry: Some("main.js".to_string()),
                 xz: Some(false),
                 override_prebuild_file: None,
-                package_name: None,
-                name: None,
-                icon: None,
-                scope: None,
-                description: None,
                 output_dir: None,
                 target_base_name: None,
                 before_build: None,
@@ -165,6 +164,7 @@ impl FripackConfig {
                     inject_mode: InjectMode::NativeAddNeeded,
                     target_lib: Some("libnative-lib.so".to_string()),
                 }),
+                xposed: None,
                 sign: Some(SignConfig {
                     keystore: "C:\\Users\\YourUser\\.android\\debug.keystore".to_string(),
                     keystore_pass: "android".to_string(),
@@ -249,13 +249,7 @@ pub struct TargetConfig {
     pub xz: Option<bool>,
     #[serde(rename = "overridePrebuildFile")]
     pub override_prebuild_file: Option<String>,
-    #[serde(rename = "packageName")]
-    pub package_name: Option<String>,
     pub sign: Option<SignConfig>,
-    pub name: Option<String>,
-    pub icon: Option<String>,
-    pub scope: Option<String>,
-    pub description: Option<String>,
     #[serde(rename = "outputDir")]
     pub output_dir: Option<String>,
     #[serde(rename = "targetBaseName")]
@@ -266,6 +260,7 @@ pub struct TargetConfig {
     pub after_build: Option<String>,
     #[serde(rename = "injectApk")]
     pub inject_apk: Option<InjectApkConfig>,
+    pub xposed: Option<XposedConfig>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -372,17 +367,13 @@ pub struct ResolvedTarget {
     pub entry: Option<String>,
     pub xz: Option<bool>,
     pub override_prebuild_file: Option<String>,
-    pub package_name: Option<String>,
     pub sign: Option<SignConfig>,
-    pub name: Option<String>,
-    pub icon: Option<String>,
-    pub scope: Option<String>,
-    pub description: Option<String>,
     pub output_dir: Option<String>,
     pub target_base_name: Option<String>,
     pub before_build: Option<String>,
     pub after_build: Option<String>,
     pub inject_apk: Option<InjectApkConfig>,
+    pub xposed: Option<XposedConfig>,
 }
 
 impl ResolvedTarget {
@@ -397,17 +388,13 @@ impl ResolvedTarget {
             entry,
             xz,
             override_prebuild_file,
-            package_name,
-            name,
-            icon,
-            scope,
-            description,
             sign,
             output_dir,
             target_base_name,
             before_build,
             after_build,
-            inject_apk
+            inject_apk,
+            xposed
         );
 
         if let Some(platform_str) = &other.platform {
