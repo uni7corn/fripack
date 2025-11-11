@@ -210,6 +210,17 @@ pub enum Platform {
     MacOS,
 }
 
+impl Platform {
+    pub fn binary_ext(&self) -> &'static str {
+        match self {
+            Platform::Android => "so",
+            Platform::Windows => "dll",
+            Platform::Linux => "so",
+            Platform::MacOS => "dylib",
+        }
+    }
+}
+
 #[derive(Debug, Clone)]
 pub struct PlatformConfig {
     pub arch: Arch,

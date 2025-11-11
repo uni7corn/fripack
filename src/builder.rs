@@ -33,13 +33,11 @@ impl Builder {
 
     pub async fn build_target(&mut self, target_name: &str, target: &ResolvedTarget) -> Result<()> {
         match target.target_type.as_deref() {
-            Some("android-so") => self.build_android_so(target_name, target).await,
+            Some("shared") => self.build_shared(target_name, target).await,
             Some("xposed") => self.build_xposed(target_name, target).await,
             Some(other) => anyhow::bail!("Unsupported target type: {other}"),
             None => {
-                warn!(
-                    "Target type not specified for target: {target_name}, skipping..."
-                );
+                warn!("Target type not specified for target: {target_name}, skipping...");
                 Ok(())
             }
         }
@@ -98,8 +96,8 @@ impl Builder {
         Ok(output_data)
     }
 
-    async fn build_android_so(&mut self, target_name: &str, target: &ResolvedTarget) -> Result<()> {
-        info!("→ Building Android SO target: {target_name}");
+    async fn build_shared(&mut self, target_name: &str, target: &ResolvedTarget) -> Result<()> {
+        info!("→ Building Shared Library target: {target_name}");
 
         let output_dir = target.output_dir.as_deref().unwrap_or("./fripack");
 
@@ -108,13 +106,16 @@ impl Builder {
             .platform
             .as_ref()
             .ok_or_else(|| anyhow::anyhow!("Missing required field: platform"))?;
-        let output_filename = format!("{target_name}-{platform}.so");
+        let output_filename = format!(
+            "{target_name}-{platform}.{}",
+            platform.platform.binary_ext()
+        );
         let output_file_path = std::path::Path::new(output_dir).join(&output_filename);
         std::fs::create_dir_all(output_dir)?;
         fs::write(&output_file_path, output_data).await?;
 
         info!(
-            "✓ Successfully built Android SO: {}",
+            "✓ Successfully built shared library: {}",
             output_file_path.display()
         );
 

@@ -147,19 +147,11 @@ impl Downloader {
             "fripack-inject-{}-{}.{}",
             frida_version,
             platform,
-            if platform.platform == Platform::Windows {
-                "dll"
-            } else {
-                "so"
-            }
+            platform.platform.binary_ext()
         )
     }
 
-    pub fn get_prebuilt_file_url(
-        &self,
-        platform: &PlatformConfig,
-        frida_version: &str,
-    ) -> String {
+    pub fn get_prebuilt_file_url(&self, platform: &PlatformConfig, frida_version: &str) -> String {
         format!(
             "https://github.com/FriRebuild/fripack-inject/releases/download/{}/{}",
             frida_version,
