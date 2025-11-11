@@ -119,7 +119,6 @@ impl BinaryProcessor {
 
             offset_spare_area = (offset_spare_area + 0xfff) & !0xfff;
 
-            new_section.name = ByteString::from(".fripack_config");
             new_section.sh_size = data.len() as u64;
             new_section.data = object::build::elf::SectionData::Data(data.into());
             new_section.sh_flags = (object::elf::SHF_ALLOC | object::elf::SHF_WRITE) as u64;
@@ -200,9 +199,9 @@ impl BinaryProcessor {
             .find(|seg| {
                 seg.sections
                     .iter()
-                    .any(|sec| elf.sections.get(*sec).name == ByteString::from(".fripack_config"))
+                    .any(|sec| *sec == fripack_section_id)
             })
-            .context("Failed to find .fripack_config segment")?;
+            .context("Failed to find fripack_config segment")?;
 
         embedded_config.data_offset = ((fripack_section_segment.p_offset as i32
             - embedded_config_offset as i32)
