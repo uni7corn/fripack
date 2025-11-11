@@ -240,17 +240,22 @@ impl std::fmt::Display for PlatformConfig {
 
 impl PlatformConfig {
     pub fn from_str(platform_desc: String) -> Result<Self> {
-        let mut parts: Vec<&str> = platform_desc.split('-').collect();
-        if parts[0] == "x64" {
-            parts[0] = "x86_64";
-        }
-        let (arch, platform) = match parts.as_slice() {
-            ["arm32", "android"] => (Arch::Arm32, Platform::Android),
-            ["arm64", "android"] => (Arch::Arm64, Platform::Android),
-            ["x86", "android"] => (Arch::X86, Platform::Android),
-            ["x86_64", "android"] => (Arch::X86_64, Platform::Android),
-            ["x86_64", "windows"] => (Arch::X86_64, Platform::Windows),
-            ["x86_64", "linux"] => (Arch::X86_64, Platform::Linux),
+        let parts: Vec<&str> = platform_desc.split('-').collect();
+
+        let (platform, arch) = match parts.as_slice() {
+            ["android", "arm32"] => (Platform::Android, Arch::Arm32),
+            ["android", "arm64-v8a"] => (Platform::Android, Arch::Arm64),
+            ["android", "arm64"] => (Platform::Android, Arch::Arm64),
+            ["android", "x86"] => (Platform::Android, Arch::X86),
+            ["android", "x86_64"] => (Platform::Android, Arch::X86_64),
+            ["android", "x64"] => (Platform::Android, Arch::X86_64),
+            ["windows", "x86"] => (Platform::Windows, Arch::X86),
+            ["windows", "x86_64"] => (Platform::Windows, Arch::X86_64),
+            ["windows", "x64"] => (Platform::Windows, Arch::X86_64),
+            ["linux", "x86"] => (Platform::Linux, Arch::X86),
+            ["linux", "x86_64"] => (Platform::Linux, Arch::X86_64),
+            ["macos", "x86_64"] => (Platform::MacOS, Arch::X86_64),
+            ["macos", "arm64"] => (Platform::MacOS, Arch::Arm64),
             _ => anyhow::bail!("Unsupported platform description: {platform_desc}"),
         };
         Ok(PlatformConfig { arch, platform })

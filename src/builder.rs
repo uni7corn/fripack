@@ -62,6 +62,15 @@ impl Builder {
         // Get prebuilt file data
         let prebuilt_data = if let Some(override_file) = &target.override_prebuild_file {
             info!("→ Using override prebuilt file: {override_file}");
+
+            if !override_file.ends_with(platform.platform.binary_ext()) {
+                anyhow::bail!(
+                    "Override prebuilt file extension {} does not match the platform expected extension: {}",
+                    override_file,
+                    platform.platform.binary_ext()
+                );
+            }
+
             fs::read(override_file).await?
         } else {
             info!("→ Downloading prebuilt file for platform: {platform:?}");
