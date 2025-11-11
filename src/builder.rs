@@ -1,5 +1,5 @@
 use crate::binary::BinaryProcessor;
-use crate::config::{ResolvedConfig, ResolvedTarget};
+use crate::config::{Platform, ResolvedConfig, ResolvedTarget};
 use crate::downloader::Downloader;
 use anyhow::Result;
 use log::{info, warn};
@@ -137,6 +137,11 @@ impl Builder {
             .name
             .as_ref()
             .ok_or_else(|| anyhow::anyhow!("Missing required field: name"))?;
+
+        if platform.platform != Platform::Android {
+            anyhow::bail!("Xposed target only supports Android platform");
+        }
+
         let sign = target.sign.unwrap_or(false);
         let output_dir = target.output_dir.as_deref().unwrap_or("./fripack");
         let binary_data = self.generate_binary(target).await?;
