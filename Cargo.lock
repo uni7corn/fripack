@@ -417,6 +417,7 @@ dependencies = [
  "indicatif",
  "json5",
  "log",
+ "memchr",
  "object 0.37.3",
  "object-rewrite",
  "rand",

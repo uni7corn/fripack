@@ -15,6 +15,7 @@ pub struct Builder {
 #[derive(serde::Serialize, serde::Deserialize)]
 enum Mode {
     EmbedJs = 1,
+    Noop = 2,
 }
 #[derive(serde::Serialize, serde::Deserialize)]
 struct EmbeddedConfigData {
@@ -132,6 +133,8 @@ impl Builder {
         processor
             .add_embedded_config_data(config_data.as_bytes(), use_xz)
             .unwrap();
+
+        processor.anti_anti_frida()?;
 
         let output_data = processor.into_data();
 

@@ -1,15 +1,16 @@
 use anyhow::{Context, Result};
 use log::info;
 use object::{
-    build::elf::Dynamic,
+    build::{elf::Dynamic, ByteString},
     elf::{PF_R, PF_W, PT_DYNAMIC, PT_LOAD, PT_PHDR},
     pe,
     read::{
         coff::CoffHeader,
         pe::{ImageNtHeaders, ImageOptionalHeader},
     },
-    LittleEndian as LE,
+    LittleEndian as LE, Object, ObjectSymbol,
 };
+use rand::Rng;
 #[repr(C, packed)]
 #[derive(Debug, Clone, Copy)]
 pub struct EmbeddedConfig {
@@ -268,6 +269,86 @@ impl BinaryProcessor {
                 };
                 self.data = out_data;
             }
+        }
+
+        Ok(())
+    }
+    fn generate_random_string(len: usize) -> String {
+        rand::thread_rng()
+            .sample_iter(&rand::distributions::Alphanumeric)
+            .take(len)
+            .map(char::from)
+            .collect()
+    }
+
+    pub fn anti_anti_frida(&mut self) -> Result<()> {
+        if let ObjectFormat::Elf = self.format {
+            let cloned_data = self.data.clone();
+            let obj = object::build::elf::Builder::read(cloned_data.as_slice())?;
+            let rodata_section_range = {
+                let rodata_section = obj
+                    .sections
+                    .iter()
+                    .find(|sec| sec.name == ".rodata".into())
+                    .context("Failed to find .rodata section")?;
+                (rodata_section.sh_offset as usize)
+                    ..(rodata_section.sh_offset as usize + rodata_section.sh_size as usize)
+            };
+
+            let dynstr_section_range = {
+                let dynstr_section = obj
+                    .sections
+                    .iter()
+                    .find(|sec| sec.name == ".dynstr".into())
+                    .context("Failed to find .dynstr section")?;
+                (dynstr_section.sh_offset as usize)
+                    ..(dynstr_section.sh_offset as usize + dynstr_section.sh_size as usize)
+            };
+
+            let mut replacements = 0;
+            // Define keywords to replace
+            let keywords = [
+                (b"frida".as_slice(), Self::generate_random_string(5)),
+                (b"gum-js", Self::generate_random_string(6)),
+                (b"gum", Self::generate_random_string(3)),
+                (b"gmain", Self::generate_random_string(5)),
+                (b"gdbus", Self::generate_random_string(5)),
+                (b"Gum", Self::generate_random_string(3)),
+                (b"Frida", Self::generate_random_string(5)),
+                (b"GUM", Self::generate_random_string(3)),
+            ];
+
+            for (keyword_bytes, replacement_str) in &keywords {
+                let replace_bytes = replacement_str.as_bytes();
+
+                // Use a sliding window approach with memchr for faster searching
+                let mut pos = 0;
+                while let Some(offset) = memchr::memmem::find(&self.data[pos..], keyword_bytes) {
+                    if !rodata_section_range.contains(&(pos + offset))
+                        && !dynstr_section_range.contains(&(pos + offset))
+                    {
+                        pos += offset + keyword_bytes.len();
+                        info!("Skipped replacement at position {}", pos);
+                        continue;
+                    }
+
+                    let i = pos + offset;
+                    self.data[i..i + keyword_bytes.len()].copy_from_slice(replace_bytes);
+                    replacements += 1;
+                    pos = i + keyword_bytes.len();
+                }
+            }
+
+            info!("Replaced {} occurrences of keywords", replacements);
+
+            // Fix GNU_HASH as we changed the string table
+            let cloned_data = self.data.clone();
+            let mut obj = object::build::elf::Builder::read(cloned_data.as_slice())?;
+            obj.delete_orphan_dynamics();
+            obj.delete_orphan_symbols();
+            obj.set_section_sizes();
+            self.data = vec![];
+            obj.write(&mut self.data)?;
         }
 
         Ok(())

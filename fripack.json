@@ -13,14 +13,16 @@
         "type": "xposed",
         "platform": "android-arm64",
         "xposed": {
-            "packageName": "com.example.myxposedmodule",
-            "name": "My Xposed Module",
+            "packageName": "com.fripack.examplexposedmodule",
+            "name": "Fripack Xposed Module Example",
         },
         "sign": {
             "keystore": "C:\\Users\\MicroBlock\\.android\\debug.keystore",
             "keystorePass": "android",
             "keystoreAlias": "androiddebugkey"
-        }
+        },
+        "afterBuild": "adb install fripack/fripack-android-arm64.apk",
+        "overridePrebuildFile": "E:\\fripack\\build\\fripack-inject\\build\\android\\arm64-v8a\\release\\libfripack-inject.so",
     },
     "xp-arm32": {
         "inherit": "xp",
@@ -33,6 +35,11 @@
     "xp-x86_64": {
         "inherit": "xp",
         "platform": "android-x86_64",
+    },
+    "android_so": {
+        "inherit": "base",
+        "type": "shared",
+        "platform": "android-arm64",
     },
     "linux_so": {
         "inherit": "base",
