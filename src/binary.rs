@@ -329,6 +329,9 @@ impl BinaryProcessor {
                 kwd("g_dbus"),
                 kwd("g_main"),
                 kwd("GMain"),
+                kwd("solist"),
+                kwd("GLib-GIO"),
+                kwd("GLib")
             ];
 
             for (keyword_bytes, replacement_str) in &keywords {

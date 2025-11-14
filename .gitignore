@@ -2,3 +2,5 @@
 /*.so
 libfripack-inject.so
 /fripack
+node_modules
+yarn.lock
