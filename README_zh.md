@@ -254,6 +254,10 @@ fripack watch my-watch-target
 
 **注意**：监听模式需要安装 `adb` 并在 PATH 中可访问，以便推送文件和安装包到 Android 设备。
 
+#### 工作原理
+
+在监听模式下，被注入的二进制会监控本机的指定路径的 JS 文件，并在文件发生变化时重新加载。该路径通过 `pushPath` 设置，默认为 `/data/local/tmp/fripack_dev.js`。在 Android 平台上，fripack 还会监听 `entry` 文件，并在其被修改时自动推送到 `pushPath` 位置。在其他平台上，你可以设置自己的 `pushPath` 并在文件更改时手动复制文件，或者继续使用 `frida-server` 直接进行开发。
+
 ---
 
 ## Notes

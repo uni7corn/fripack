@@ -232,6 +232,8 @@ Builds your Frida script into a Zygisk module for Magisk. Only supports `Android
 }
 ```
 
+---
+
 ### Developing Frida Script with Fripack
 
 Fripack supports a watch mode for development that enables hot-reloading of JavaScript files without rebuilding the entire package.
@@ -252,6 +254,9 @@ The watch process will:
 
 **Note**: Watch mode requires `adb` to be installed and accessible in your PATH for pushing files and installing packages to Android devices.
 
+#### How does this work?
+
+Under watch mode, the injected payload monitors a specified path and triggers a reload when the file changes. The path is set via `pushPath` and defaults to `/data/local/tmp/fripack_dev.js`. On the Android platform, fripack also watches the `entry` file and automatically pushes it to the `pushPath` location whenever it is modified. On other platforms, you can either set your own `pushPath` and manually copy the file upon changes, or continue your development workflow using `frida-server` directly.
 
 ---
 

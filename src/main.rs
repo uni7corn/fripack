@@ -22,7 +22,7 @@ use builder::Builder;
 use config::FripackConfig;
 use downloader::Downloader;
 
-use crate::config::ResolvedConfig;
+use crate::config::{Platform, ResolvedConfig};
 
 #[derive(Parser)]
 #[command(name = "fripack")]
@@ -299,7 +299,7 @@ async fn update_target(
         rebuild_install_target(target, target_config).await?;
     }
     let entry = target_config.entry.as_ref().unwrap();
-    if Path::new(entry).exists() {
+    if Path::new(entry).exists() && target_config.platform.as_ref().unwrap().platform == Platform::Android {
         info!("→ Pushing JS file to device...");
         let output = tokio::process::Command::new("adb")
             .arg("push")
