@@ -23,6 +23,11 @@ Cross-platform Frida scripts often make it cumbersome to build deliverables for 
 
 Download the latest binary from the [releases page](https://github.com/std-microblock/fripack/releases/latest) and install it as needed.
 
+You can also install it with cargo if you have rust installed on your computer:
+```bash
+cargo install --git https://github.com/std-microblock/fripack/
+```
+
 ## Getting Started
 
 ### Basic Configuration
