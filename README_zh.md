@@ -146,6 +146,7 @@ fripack watch xposed
   - `keystore`: 密钥库路径。
   - `keystorePass`: 密钥库密码。
   - `keystoreAlias`: 密钥库中的别名。
+  - `keyPass` (可选): 私钥密码。
 
 #### `shared`
 
@@ -175,6 +176,7 @@ fripack watch xposed
   - `keystore`: 密钥库路径。
   - `keystorePass`: 密钥库密码。
   - `keystoreAlias`: 密钥库中的别名。
+  - `keyPass` (可选): 私钥密码。
 
 **配置示例：**
 ```json

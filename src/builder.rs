@@ -440,6 +440,7 @@ doNotCompress:
             let keystore = &sign_config.keystore;
             let keystore_pass = &sign_config.keystore_pass;
             let keystore_alias = &sign_config.keystore_alias;
+            let key_pass = &sign_config.key_pass.as_deref().unwrap_or(keystore_pass);
             let keystore_path = if PathBuf::from(keystore).is_absolute() {
                 PathBuf::from(keystore)
             } else {
@@ -454,7 +455,9 @@ doNotCompress:
                 .arg("--ks-key-alias")
                 .arg(keystore_alias)
                 .arg("--ks-pass")
-                .arg(format!("pass:{keystore_pass}"));
+                .arg(format!("pass:{keystore_pass}"))
+                .arg("--key-pass")
+                .arg(format!("pass:{key_pass}"));
 
             let output = command
                 .arg("--out")
@@ -671,6 +674,8 @@ doNotCompress:
                 .arg(&sign_config.keystore_alias)
                 .arg("--ks-pass")
                 .arg(format!("pass:{}", sign_config.keystore_pass))
+                .arg("--key-pass")
+                .arg(format!("pass:{}", sign_config.key_pass.as_deref().unwrap_or(&sign_config.keystore_pass)))
                 .arg("--out")
                 .arg(&signed_apk_path)
                 .arg(&rebuilt_apk_path)
