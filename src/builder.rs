@@ -31,7 +31,11 @@ impl Builder {
         }
     }
 
-    pub async fn build_target(&mut self, target_name: &str, target: &ResolvedTarget) -> Result<Option<String>> {
+    pub async fn build_target(
+        &mut self,
+        target_name: &str,
+        target: &ResolvedTarget,
+    ) -> Result<Option<String>> {
         // Run beforeBuild hook
         if let Some(cmd) = &target.before_build {
             self.run_hook(cmd).await?;
@@ -120,11 +124,10 @@ impl Builder {
 
         let config_data = match mode {
             "embedjs" => {
-                let entry = target
-                    .entry
-                    .as_ref()
-                    .ok_or_else(|| anyhow::anyhow!("Missing required field: entry for embedjs mode"))?;
-                
+                let entry = target.entry.as_ref().ok_or_else(|| {
+                    anyhow::anyhow!("Missing required field: entry for embedjs mode")
+                })?;
+
                 // Read entry file
                 info!("→ Reading entry file: {entry}");
                 let entry_data = fs::read(entry).await?;
@@ -137,10 +140,9 @@ impl Builder {
                 }
             }
             "watchpath" => {
-                let push_path = target
-                    .push_path
-                    .as_ref()
-                    .ok_or_else(|| anyhow::anyhow!("Missing required field: pushPath for watchpath mode"))?;
+                let push_path = target.push_path.as_ref().ok_or_else(|| {
+                    anyhow::anyhow!("Missing required field: pushPath for watchpath mode")
+                })?;
 
                 EmbeddedConfigData {
                     mode: Mode::WatchPath,
@@ -438,12 +440,17 @@ doNotCompress:
             let keystore = &sign_config.keystore;
             let keystore_pass = &sign_config.keystore_pass;
             let keystore_alias = &sign_config.keystore_alias;
+            let keystore_path = if PathBuf::from(keystore).is_absolute() {
+                PathBuf::from(keystore)
+            } else {
+                std::env::current_dir()?.join(keystore)
+            };
 
             let mut command = Command::new(which::which("apksigner")?);
             command
                 .arg("sign")
                 .arg("--ks")
-                .arg(keystore)
+                .arg(&keystore_path)
                 .arg("--ks-key-alias")
                 .arg(keystore_alias)
                 .arg("--ks-pass")
@@ -481,10 +488,13 @@ doNotCompress:
             info!("✓ Copied APK to: {}", final_apk_path.display());
             Ok(final_apk_path.to_string_lossy().to_string())
         }
-
     }
 
-    async fn build_inject_apk(&mut self, target_name: &str, target: &ResolvedTarget) -> Result<String> {
+    async fn build_inject_apk(
+        &mut self,
+        target_name: &str,
+        target: &ResolvedTarget,
+    ) -> Result<String> {
         let base_name = target.target_base_name.as_deref().unwrap_or(target_name);
         info!("→ Building Inject APK target: {target_name} (base name: {base_name})");
 
