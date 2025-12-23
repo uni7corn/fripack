@@ -343,7 +343,6 @@ impl BinaryProcessor {
                 "gmain",
                 "gum-js",
                 "gdbus",
-                "Frida",
                 "GDBus",
                 "g_dbus",
                 "g_main",
