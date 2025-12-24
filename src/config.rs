@@ -19,6 +19,8 @@ pub struct SignConfig {
     pub keystore_pass: String,
     #[serde(rename = "keystoreAlias")]
     pub keystore_alias: String,
+    #[serde(rename = "keyPass")]
+    pub key_pass: Option<String>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -112,6 +114,7 @@ impl FripackConfig {
                     keystore: "C:\\Users\\YourUser\\.android\\debug.keystore".to_string(),
                     keystore_pass: "android".to_string(),
                     keystore_alias: "androiddebugkey".to_string(),
+                    key_pass: None,
                 }),
                 output_dir: None,
                 target_base_name: None,
@@ -187,6 +190,7 @@ impl FripackConfig {
                     keystore: "C:\\Users\\YourUser\\.android\\debug.keystore".to_string(),
                     keystore_pass: "android".to_string(),
                     keystore_alias: "androiddebugkey".to_string(),
+                    key_pass: None,
                 }),
                 watch_path: None,
                 push_path: None,

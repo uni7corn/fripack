@@ -150,7 +150,7 @@ Builds your Frida script into an Xposed Module. Only supports `Android` platform
   - `keystore`: Path to the keystore.
   - `keystorePass`: Keystore passphrase.
   - `keystoreAlias`: Alias in the keystore.
-
+  - `keyPass` (optional): The password for the signer's private key.
 #### `shared`
 
 Builds your Frida script into a shared library (`.so` / `.dll`) that can be loaded via various methods (e.g., `LD_PRELOAD`).
@@ -179,6 +179,7 @@ It's also recommended to have [`zipalign`](https://developer.android.com/tools/z
   - `keystore`: Path to the keystore.
   - `keystorePass`: Keystore passphrase.
   - `keystoreAlias`: Alias in the keystore.
+  - `keyPass` (optional): The password for the signer's private key.
 **Example configuration:**
 ```json
 {
