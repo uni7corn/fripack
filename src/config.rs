@@ -104,7 +104,7 @@ impl FripackConfig {
             TargetConfig {
                 inherit: None,
                 target_type: Some("xposed".to_string()),
-                platform: Some("arm64-v8a".to_string()),
+                platform: Some("android-arm64".to_string()),
                 version: Some("1.0.0".to_string()),
                 frida_version: None,
                 entry: None,
@@ -142,8 +142,8 @@ impl FripackConfig {
             "example-android-so".to_string(),
             TargetConfig {
                 inherit: Some("base".to_string()),
-                target_type: Some("android-so".to_string()),
-                platform: Some("arm64-v8a".to_string()),
+                target_type: Some("shared".to_string()),
+                platform: Some("android-arm64".to_string()),
                 version: None,
                 frida_version: None,
                 entry: None,
@@ -168,7 +168,7 @@ impl FripackConfig {
             TargetConfig {
                 inherit: None,
                 target_type: Some("inject-apk".to_string()),
-                platform: Some("arm64-v8a".to_string()),
+                platform: Some("android-arm64".to_string()),
                 version: Some("1.0.0".to_string()),
                 frida_version: Some("17.5.1".to_string()),
                 entry: Some("main.js".to_string()),
@@ -203,7 +203,7 @@ impl FripackConfig {
             TargetConfig {
                 inherit: None,
                 target_type: Some("zygisk".to_string()),
-                platform: Some("arm64-v8a".to_string()),
+                platform: Some("android-arm64".to_string()),
                 version: Some("1.0.0".to_string()),
                 frida_version: Some("17.5.1".to_string()),
                 entry: Some("main.js".to_string()),
