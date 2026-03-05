@@ -5,3 +5,4 @@ libfripack-inject.so
 node_modules
 yarn.lock
 main_compiled.js
+/fripack_cache

@@ -90,5 +90,21 @@
             "keystorePass": "android",
             "keystoreAlias": "androiddebugkey"
         }
+    },
+    "inject-apk-2": {
+        "inherit": "base",
+        "type": "inject-apk",
+        "platform": "android-arm64",
+        "fridaVersion": "17.5.1",
+        "entry": "main.js",
+        "injectApk": {
+            "sourceApkPackageName": "com.catchingnow.icebox",
+            "injectMode": "NativeAddNeeded",
+        },
+        "sign": {
+            "keystore": "/Users/microblock/.android/debug.keystore",
+            "keystorePass": "android",
+            "keystoreAlias": "androiddebugkey"
+        }
     }
 }

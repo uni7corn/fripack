@@ -1,7 +1,7 @@
-use crate::binary::BinaryProcessor;
+use crate::binary::{add_needed_library_to_file, BinaryProcessor};
 use crate::config::{Platform, ResolvedConfig, ResolvedTarget, TargetConfig};
 use crate::downloader::Downloader;
-use anyhow::Result;
+use anyhow::{Context, Result};
 use log::{info, warn};
 use rand::Rng;
 use std::path::{Path, PathBuf};
@@ -22,6 +22,47 @@ struct EmbeddedConfigData {
     js_filepath: Option<String>,
     js_content: Option<String>,
     watch_path: Option<String>,
+}
+
+fn find_sdk_binary(bin_name: &str) -> Result<PathBuf> {
+    if let Ok(path) = which::which(bin_name) {
+        return Ok(path);
+    }
+
+    let sdk_root = std::env::var("ANDROID_SDK_ROOT")
+        .or_else(|_| std::env::var("ANDROID_HOME"))
+        .map_err(|_| anyhow::anyhow!("Neither ANDROID_SDK_ROOT nor ANDROID_HOME is set"))?;
+
+    let build_tools_path = Path::new(&sdk_root).join("build-tools");
+
+    if !build_tools_path.exists() {
+        anyhow::bail!("Build tools directory not found at {:?}", build_tools_path);
+    }
+
+    fn search_dir(dir: &Path, target: &str) -> Option<PathBuf> {
+        let entries = std::fs::read_dir(dir).ok()?;
+        for entry in entries.flatten() {
+            let path = entry.path();
+            if path.is_dir() {
+                if let Some(found) = search_dir(&path, target) {
+                    return Some(found);
+                }
+            } else {
+                let file_name = path.file_name()?.to_string_lossy();
+                if file_name == target
+                    || (cfg!(windows)
+                        && (file_name == format!("{}.exe", target)
+                            || file_name == format!("{}.bat", target)))
+                {
+                    return Some(path);
+                }
+            }
+        }
+        None
+    }
+
+    search_dir(&build_tools_path, bin_name)
+        .with_context(|| format!("Binary '{}' not found in Android SDK build-tools", bin_name))
 }
 
 impl Builder {
@@ -538,16 +579,29 @@ doNotCompress:
 
         // Create temporary directory for APK manipulation
         let temp_dir = tempfile::tempdir()?;
-        let temp_path = temp_dir.path();
+        let temp_path = temp_dir.keep();
         info!("→ Created temporary directory: {}", temp_path.display());
 
         // Decompile APK using apktool
         let decompiled_dir = temp_path.join("decompiled");
         info!("→ Decompiling APK with apktool...");
-        let output = tokio::process::Command::new(which::which("apktool")?)
-            .arg("d")
-            .arg("-f")
-            .arg("-r")
+
+        // Apktool 3.x has an issue when using -r flag
+        // https://github.com/iBotPeaches/Apktool/issues/4103
+
+        let apktool = which::which("apktool")?;
+        let version = tokio::process::Command::new(&apktool).output().await?;
+        // Apktool 3.0.1 - a tool for reengineering Android apk files
+
+        let mut cmd = tokio::process::Command::new(&apktool);
+        cmd.arg("d").arg("-f");
+
+        if !String::from_utf8_lossy(&version.stdout).contains("Apktool 3.") {
+            cmd.arg("-r");
+        } else {
+            warn!("Detected apktool 3.x, skipping --no-res flag due to known issues.");
+        }
+        let output = cmd
             .arg("-s")
             .arg(&source_apk_path)
             .arg("-o")
@@ -565,24 +619,19 @@ doNotCompress:
 
         // Find target native library
         let lib_dir = decompiled_dir.join("lib").join(platform.android_abi()?);
+        // Read the target library
         let target_lib_path = self
             .find_target_library(&lib_dir, &inject_config.target_lib)
             .await?;
 
         info!("→ Selected target library: {}", target_lib_path.display());
 
-        // Read the target library
-        let mut target_lib_data = fs::read(&target_lib_path).await?;
-
         // Inject our library using ELF manipulation
         let inject_lib_name = format!("lib{}.so", generate_random_string(8));
         info!("→ Injecting library as: {}", inject_lib_name);
-        let mut processor = BinaryProcessor::new(target_lib_data.clone())?;
-        processor.add_needed_library(&inject_lib_name)?;
-        target_lib_data = processor.into_data();
+        add_needed_library_to_file(&target_lib_path, &inject_lib_name)?;
 
         // Write the modified library back
-        fs::write(&target_lib_path, &target_lib_data).await?;
         fs::write(
             Path::new(&target_lib_path)
                 .parent()
@@ -635,7 +684,8 @@ doNotCompress:
         // Run zipalign on the rebuilt APK
         info!("→ Aligning APK with zipalign...");
         let aligned_apk_path = temp_path.join(format!("{base_name}-{platform}-aligned.apk"));
-        let output = tokio::process::Command::new(which::which("zipalign")?)
+
+        let output = tokio::process::Command::new(find_sdk_binary("zipalign")?)
             .arg("-v")
             .arg("-p")
             .arg("4")
@@ -664,7 +714,7 @@ doNotCompress:
             info!("→ Signing APK...");
             let signed_apk_path = temp_path.join(format!("{base_name}-{platform}-signed.apk"));
 
-            let mut command = Command::new(which::which("apksigner")?);
+            let mut command = Command::new(find_sdk_binary("apksigner")?);
 
             let output = command
                 .arg("sign")
@@ -675,7 +725,13 @@ doNotCompress:
                 .arg("--ks-pass")
                 .arg(format!("pass:{}", sign_config.keystore_pass))
                 .arg("--key-pass")
-                .arg(format!("pass:{}", sign_config.key_pass.as_deref().unwrap_or(&sign_config.keystore_pass)))
+                .arg(format!(
+                    "pass:{}",
+                    sign_config
+                        .key_pass
+                        .as_deref()
+                        .unwrap_or(&sign_config.keystore_pass)
+                ))
                 .arg("--out")
                 .arg(&signed_apk_path)
                 .arg(&rebuilt_apk_path)

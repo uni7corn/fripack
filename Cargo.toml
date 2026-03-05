@@ -39,7 +39,7 @@ tempfile = "3.8"
 
 # Binary manipulation
 object = { git = "https://github.com/gimli-rs/object/", features = ["build", "write"] }
-object-rewrite = "*"
+lief = "0.17.4"
 
 # XZ compression
 xz2 = "0.1"

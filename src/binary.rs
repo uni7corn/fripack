@@ -2,7 +2,7 @@ use anyhow::{Context, Result};
 use log::info;
 use object::{
     build::{elf::Dynamic, ByteString},
-    elf::{PF_R, PF_W, PT_DYNAMIC, PT_LOAD, PT_PHDR},
+    elf::{PF_R, PF_W, PT_LOAD, PT_PHDR},
     pe,
     read::{
         coff::CoffHeader,
@@ -98,48 +98,21 @@ impl BinaryProcessor {
                     && self.data[i + 16..i + 20] == [0, 0, 0, 0]
             })
     }
+}
 
-    pub fn add_needed_library(&mut self, lib_name: &str) -> Result<()> {
-        match self.format {
-            ObjectFormat::Elf => {
-                let data_cloned = self.data.clone();
-                let mut elf = object_rewrite::Rewriter::read(&data_cloned)?;
-                elf.elf_add_needed(vec![lib_name.as_bytes().to_vec()].as_ref())?;
-                self.data = vec![];
-                elf.write(&mut self.data)?;
-
-                // Fix .dynamic section size
-                let data_cloned = self.data.clone();
-                let mut elf = object::build::elf::Builder::read(data_cloned.as_slice())?;
-                elf.delete_orphan_symbols();
-                elf.delete_unused_versions();
-                elf.set_section_sizes();
-                if let Some(dynamic_segment) =
-                    elf.segments.iter_mut().find(|seg| seg.p_type == PT_DYNAMIC)
-                {
-                    let dynamic_section = elf
-                        .sections
-                        .iter_mut()
-                        .find(|sec| sec.sh_type == object::elf::SHT_DYNAMIC)
-                        .context("Failed to find .dynamic section")?;
-                    let dynamic_data_size = dynamic_section.sh_size;
-                    dynamic_segment.p_filesz = dynamic_data_size;
-                    dynamic_segment.p_memsz = dynamic_data_size;
-                    dynamic_section.sh_size = dynamic_data_size;
-
-                    info!("Updated .dynamic section size to {}", dynamic_data_size);
-                }
-
-                self.data = vec![];
-                elf.write(&mut self.data)?;
-            }
-            ObjectFormat::Pe => {
-                anyhow::bail!("Adding needed library is not supported for PE format");
-            }
-        }
+pub fn add_needed_library_to_file(path: &std::path::Path, lib_name: &str) -> Result<()> {
+    let mut file = std::fs::File::open(path)?;
+    if let Some(lief::Binary::ELF(mut elf)) = lief::Binary::from(&mut file) {
+        elf.add_library(lib_name);
+        elf.write(path.to_str().context("Invalid path")?);
+        info!("Added needed library '{}' via LIEF", lib_name);
         Ok(())
+    } else {
+        anyhow::bail!("Failed to parse ELF binary with LIEF")
     }
+}
 
+impl BinaryProcessor {
     pub fn add_embedded_config_data(&mut self, config_data: &[u8], use_xz: bool) -> Result<()> {
         let data = if use_xz {
             self.compress_xz(config_data)?
