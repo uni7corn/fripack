@@ -488,7 +488,7 @@ doNotCompress:
                 std::env::current_dir()?.join(keystore)
             };
 
-            let mut command = Command::new(which::which("apksigner")?);
+            let mut command = Command::new(find_sdk_binary("apksigner")?);
             command
                 .arg("sign")
                 .arg("--ks")
@@ -869,7 +869,7 @@ doNotCompress:
 
         // Get APK path from device
         info!("→ Getting APK path from device...");
-        let output = tokio::process::Command::new(which::which("adb")?)
+        let output = tokio::process::Command::new(find_sdk_binary("adb")?)
             .arg("shell")
             .arg("pm")
             .arg("path")
